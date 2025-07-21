@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter font from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -144,25 +146,48 @@
         <div id="dashboard-section" class="card">
             <h2 class="text-2xl font-semibold text-gray-700 mb-4">總覽儀表板</h2>
             <!-- Time Range Selector -->
-            <div class="mb-8 flex justify-center gap-3">
+            <div class="mb-8 flex flex-wrap justify-center items-center gap-3">
                 <button id="time-range-month" class="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200">本月</button>
                 <button id="time-range-quarter" class="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200">本季</button>
                 <button id="time-range-year" class="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-blue-600 text-white shadow-md">本年</button>
+                <select id="year-selector" class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                    <!-- Years will be populated by JS -->
+                </select>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-10">
                 <div class="p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
-                    <p class="text-lg font-medium text-blue-700">總收入</p>
+                    <p id="total-income-title" class="text-lg font-medium text-blue-700">總收入</p>
                     <p id="total-income" class="text-3xl font-bold text-blue-800">NT$ 0</p>
                 </div>
                 <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-200">
-                    <p class="text-lg font-medium text-red-700">總支出</p>
+                    <p id="total-expense-title" class="text-lg font-medium text-red-700">總支出</p>
                     <p id="total-expense" class="text-3xl font-bold text-red-800">NT$ 0</p>
                 </div>
                 <div class="p-4 bg-green-50 rounded-lg shadow-sm border border-green-200">
-                    <p class="text-lg font-medium text-green-700">總淨利潤</p>
+                    <p id="net-profit-title" class="text-lg font-medium text-green-700">總淨利潤</p>
                     <p id="net-profit" class="text-3xl font-bold text-green-800">NT$ 0</p>
                 </div>
             </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+                <div class="card p-5">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">收入類別分佈</h3>
+                    <canvas id="incomeCategoryPieChart"></canvas>
+                    <p class="text-center text-gray-600 text-sm mt-2" id="no-income-chart-data">尚無收入數據。</p>
+                </div>
+                <div class="card p-5">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">支出類別分佈</h3>
+                    <canvas id="expenseCategoryPieChart"></canvas>
+                    <p class="text-center text-gray-600 text-sm mt-2" id="no-expense-chart-data">尚無支出數據。</p>
+                </div>
+            </div>
+            <div class="card p-5 mb-10">
+                <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">每月淨利潤趨勢 (<span id="monthly-profit-year"></span>)</h3>
+                <canvas id="monthlyNetProfitLineChart"></canvas>
+                <p class="text-center text-gray-600 text-sm mt-2" id="no-monthly-chart-data">尚無足夠數據繪製每月淨利潤趨勢圖。</p>
+            </div>
+
 
             <!-- Project Net Profit Ranking -->
             <div class="mb-10">
@@ -412,6 +437,11 @@
         let currentProjectId = null; // To keep track of the currently viewed project
         let confirmResolver = null; // For custom confirmation dialog
 
+        // Chart.js instances
+        let incomePieChartInstance = null;
+        let expensePieChartInstance = null;
+        let monthlyLineChartInstance = null;
+
         // Pre-defined categories for income and expense
         const incomeCategories = ['專案收入', '其他收入'];
         const expenseCategories = ['材料費', '施工費', '外包設計費', '運輸費', '水電瓦斯費', '租金', '辦公用品費', '交際費', '雜項支出', '其他支出'];
@@ -542,6 +572,25 @@
             }
         }
 
+        /**
+         * Populates the year selector dropdown.
+         */
+        function populateYearSelector() {
+            const yearSelector = document.getElementById('year-selector');
+            yearSelector.innerHTML = ''; // Clear existing options
+            const currentYear = new Date().getFullYear();
+            for (let i = 0; i < 5; i++) { // Show current year and past 4 years
+                const year = currentYear - i;
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = `${year}年`;
+                if (year === currentYear) {
+                    option.selected = true; // Default to current year
+                }
+                yearSelector.appendChild(option);
+            }
+        }
+
         // --- UI State Management ---
 
         /**
@@ -595,7 +644,7 @@
          */
         async function initializeFirebaseAndAuth() {
             try {
-                // Get app ID and Firebase config from global variables provided by the environment
+                // Get app ID from global variables provided by the environment
                 appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 // Use the user-provided Firebase configuration
                 const firebaseConfig = {
@@ -639,6 +688,7 @@
                         document.getElementById('user-id-display').textContent = userId;
                         console.log("Firebase initialized and authenticated. User ID:", userId);
                         // Start listening to data once authenticated
+                        populateYearSelector(); // Populate year selector on dashboard
                         setupFirestoreListeners();
                         showSection('dashboard-section'); // Show dashboard after auth
                     } else {
@@ -676,8 +726,17 @@
                 // Re-fetch all transactions to ensure latest actuals are used for project list and dashboard
                 await updateAllProjectsAndTransactions();
                 renderProjects(allProjects); // Use the globally updated allProjects
-                calculateOverallProfit(allProjects, allTransactions, document.querySelector('#time-range-year.bg-blue-600') ? 'year' : (document.querySelector('#time-range-quarter.bg-blue-600') ? 'quarter' : 'month')); // Update overall profit based on current time range
+                // Recalculate overall profit based on current dashboard selection
+                const selectedYear = document.getElementById('year-selector').value;
+                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
+                let timeRange = 'year'; // Default
+                if (activeTimeRangeButton) {
+                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
+                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
+                }
+                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
                 renderProjectProfitRanking(allProjects, allTransactions); // Update ranking
+                renderCharts(allTransactions, timeRange === 'year' ? selectedYear : new Date().getFullYear()); // Update charts
             }, (error) => {
                 console.error("Error listening to projects:", error);
                 showAlert("載入專案時發生錯誤。");
@@ -693,8 +752,17 @@
                 // Re-fetch all projects to ensure latest actuals are used for project list and dashboard
                 await updateAllProjectsAndTransactions();
                 renderProjects(allProjects); // Use the globally updated allProjects
-                calculateOverallProfit(allProjects, allTransactions, document.querySelector('#time-range-year.bg-blue-600') ? 'year' : (document.querySelector('#time-range-quarter.bg-blue-600') ? 'quarter' : 'month')); // Update overall profit based on current time range
+                // Recalculate overall profit based on current dashboard selection
+                const selectedYear = document.getElementById('year-selector').value;
+                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
+                let timeRange = 'year'; // Default
+                if (activeTimeRangeButton) {
+                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
+                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
+                }
+                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
                 renderProjectProfitRanking(allProjects, allTransactions); // Update ranking
+                renderCharts(allTransactions, timeRange === 'year' ? selectedYear : new Date().getFullYear()); // Update charts
 
                 // If currently viewing a project detail, refresh its transactions
                 if (currentProjectId) {
@@ -748,6 +816,9 @@
                     await showAlert("使用者未登入，無法儲存專案。");
                     return;
                 }
+
+                // Ensure estimatedRevenue is an integer
+                projectData.estimatedRevenue = Math.round(parseFloat(projectData.estimatedRevenue || 0));
 
                 const projectsColRef = collection(db, `artifacts/${appId}/users/${userId}/projects`);
                 if (projectId) {
@@ -1106,27 +1177,28 @@
          * @param {Array<object>} projects The array of all project objects.
          * @param {Array<object>} transactions The array of all transaction objects.
          * @param {string} timeRange 'month', 'quarter', or 'year'.
+         * @param {string} [selectedYear] The specific year to filter by (if timeRange is 'year' or year selector is used).
          */
-        function calculateOverallProfit(projects, transactions, timeRange) {
+        function calculateOverallProfit(projects, transactions, timeRange, selectedYear = new Date().getFullYear().toString()) {
             const now = new Date();
             let startDate = new Date();
             let endDate = new Date(now); // Clone now for endDate manipulation
+            let periodTitle = '';
 
-            switch (timeRange) {
-                case 'month':
-                    startDate.setMonth(now.getMonth(), 1); // First day of current month
-                    break;
-                case 'quarter':
-                    const currentMonth = now.getMonth();
-                    const currentQuarterStartMonth = Math.floor(currentMonth / 3) * 3;
-                    startDate.setMonth(currentQuarterStartMonth, 1);
-                    break;
-                case 'year':
-                    startDate.setFullYear(now.getFullYear(), 0, 1); // First day of current year
-                    break;
-                default: // Default to year if invalid
-                    startDate.setFullYear(now.getFullYear(), 0, 1);
-                    break;
+            if (timeRange === 'year') {
+                startDate.setFullYear(parseInt(selectedYear), 0, 1); // First day of selected year
+                endDate.setFullYear(parseInt(selectedYear), 11, 31); // Last day of selected year
+                periodTitle = `${selectedYear}年`;
+            } else if (timeRange === 'month') {
+                startDate.setMonth(now.getMonth(), 1); // First day of current month
+                endDate.setMonth(now.getMonth() + 1, 0); // Last day of current month
+                periodTitle = '本月';
+            } else if (timeRange === 'quarter') {
+                const currentMonth = now.getMonth();
+                const currentQuarterStartMonth = Math.floor(currentMonth / 3) * 3;
+                startDate.setMonth(currentQuarterStartMonth, 1);
+                endDate.setMonth(currentQuarterStartMonth + 3, 0); // Last day of current quarter
+                periodTitle = '本季';
             }
             startDate.setHours(0, 0, 0, 0); // Start of the day for startDate
             endDate.setHours(23, 59, 59, 999); // End of the day for endDate
@@ -1152,13 +1224,30 @@
             document.getElementById('net-profit').classList.toggle('text-red-800', netProfit < 0);
             document.getElementById('net-profit').classList.toggle('text-green-800', netProfit >= 0);
 
+            // Update titles
+            document.getElementById('total-income-title').textContent = `${periodTitle}總收入`;
+            document.getElementById('total-expense-title').textContent = `${periodTitle}總支出`;
+            document.getElementById('net-profit-title').textContent = `${periodTitle}總淨利潤`;
+
+
             // Update time range button styles
             document.querySelectorAll('#dashboard-section .mb-8 button').forEach(btn => {
                 btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
                 btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
             });
-            document.getElementById(`time-range-${timeRange}`).classList.add('bg-blue-600', 'text-white', 'shadow-md');
-            document.getElementById(`time-range-${timeRange}`).classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+            // Only highlight if it's one of the specific buttons
+            if (timeRange === 'month') {
+                document.getElementById('time-range-month').classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                document.getElementById('time-range-month').classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+            } else if (timeRange === 'quarter') {
+                document.getElementById('time-range-quarter').classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                document.getElementById('time-range-quarter').classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+            } else if (timeRange === 'year') {
+                document.getElementById('time-range-year').classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                document.getElementById('time-range-year').classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+            }
+            // Ensure year selector value is set
+            document.getElementById('year-selector').value = selectedYear;
         }
 
         /**
@@ -1242,6 +1331,248 @@
                     </td>
                 `;
                 tableBody.appendChild(row);
+            });
+        }
+
+        /**
+         * Renders all charts on the dashboard.
+         * @param {Array<object>} transactions All transactions.
+         * @param {string} year The year for the monthly net profit chart.
+         */
+        function renderCharts(transactions, year) {
+            // Filter transactions for the selected year for charts
+            const yearTransactions = transactions.filter(txn => new Date(txn.date).getFullYear().toString() === year.toString());
+
+            renderIncomePieChart(yearTransactions);
+            renderExpensePieChart(yearTransactions);
+            renderMonthlyNetProfitLineChart(yearTransactions, year);
+        }
+
+        /**
+         * Renders the income category pie chart.
+         * @param {Array<object>} transactions Transactions for the selected period.
+         */
+        function renderIncomePieChart(transactions) {
+            if (incomePieChartInstance) {
+                incomePieChartInstance.destroy();
+            }
+
+            const incomeData = transactions.filter(t => t.type === 'income');
+            const aggregatedData = incomeData.reduce((acc, curr) => {
+                acc[curr.category] = (acc[curr.category] || 0) + Math.round(curr.amount || 0);
+                return acc;
+            }, {});
+
+            const labels = Object.keys(aggregatedData);
+            const data = Object.values(aggregatedData);
+
+            const ctx = document.getElementById('incomeCategoryPieChart').getContext('2d');
+            const noDataMessage = document.getElementById('no-income-chart-data');
+
+            if (labels.length === 0) {
+                noDataMessage.classList.remove('hidden');
+                document.getElementById('incomeCategoryPieChart').classList.add('hidden');
+                return;
+            } else {
+                noDataMessage.classList.add('hidden');
+                document.getElementById('incomeCategoryPieChart').classList.remove('hidden');
+            }
+
+            incomePieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#4F46E5', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6B7280'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatCurrency(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Renders the expense category pie chart.
+         * @param {Array<object>} transactions Transactions for the selected period.
+         */
+        function renderExpensePieChart(transactions) {
+            if (expensePieChartInstance) {
+                expensePieChartInstance.destroy();
+            }
+
+            const expenseData = transactions.filter(t => t.type === 'expense');
+            const aggregatedData = expenseData.reduce((acc, curr) => {
+                acc[curr.category] = (acc[curr.category] || 0) + Math.round(curr.amount || 0);
+                return acc;
+            }, {});
+
+            const labels = Object.keys(aggregatedData);
+            const data = Object.values(aggregatedData);
+
+            const ctx = document.getElementById('expenseCategoryPieChart').getContext('2d');
+            const noDataMessage = document.getElementById('no-expense-chart-data');
+
+            if (labels.length === 0) {
+                noDataMessage.classList.remove('hidden');
+                document.getElementById('expenseCategoryPieChart').classList.add('hidden');
+                return;
+            } else {
+                noDataMessage.classList.add('hidden');
+                document.getElementById('expenseCategoryPieChart').classList.remove('hidden');
+            }
+
+            expensePieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#4F46E5', '#6B7280',
+                            '#DC2626', '#D97706', '#059669', '#2563EB', '#3730A3', '#4B5563'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatCurrency(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Renders the monthly net profit line chart.
+         * @param {Array<object>} transactions Transactions for the selected year.
+         * @param {string} year The year for the chart.
+         */
+        function renderMonthlyNetProfitLineChart(transactions, year) {
+            if (monthlyLineChartInstance) {
+                monthlyLineChartInstance.destroy();
+            }
+
+            const monthlyData = Array(12).fill(0).map(() => ({ income: 0, expense: 0 })); // Initialize for 12 months
+
+            transactions.forEach(txn => {
+                const date = new Date(txn.date);
+                const month = date.getMonth(); // 0-11
+                if (txn.type === 'income') {
+                    monthlyData[month].income += Math.round(txn.amount || 0);
+                } else if (txn.type === 'expense') {
+                    monthlyData[month].expense += Math.round(txn.amount || 0);
+                }
+            });
+
+            const netProfits = monthlyData.map(data => data.income - data.expense);
+            const labels = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+
+            const ctx = document.getElementById('monthlyNetProfitLineChart').getContext('2d');
+            const noDataMessage = document.getElementById('no-monthly-chart-data');
+            document.getElementById('monthly-profit-year').textContent = year;
+
+            if (transactions.length === 0) {
+                noDataMessage.classList.remove('hidden');
+                document.getElementById('monthlyNetProfitLineChart').classList.add('hidden');
+                return;
+            } else {
+                noDataMessage.classList.add('hidden');
+                document.getElementById('monthlyNetProfitLineChart').classList.remove('hidden');
+            }
+
+            monthlyLineChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '淨利潤 (NT$)',
+                        data: netProfits,
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += formatCurrency(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '金額 (NT$)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
@@ -1456,9 +1787,14 @@
         document.getElementById('nav-projects-btn').addEventListener('click', () => showSection('project-list-section'));
 
         // Dashboard Time Range Event Listeners
-        document.getElementById('time-range-month').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'month'));
-        document.getElementById('time-range-quarter').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'quarter'));
-        document.getElementById('time-range-year').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'year'));
+        document.getElementById('time-range-month').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'month', new Date().getFullYear().toString()));
+        document.getElementById('time-range-quarter').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'quarter', new Date().getFullYear().toString()));
+        document.getElementById('time-range-year').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'year', new Date().getFullYear().toString()));
+        document.getElementById('year-selector').addEventListener('change', (e) => {
+            calculateOverallProfit(allProjects, allTransactions, 'year', e.target.value);
+            renderCharts(allTransactions, e.target.value); // Re-render charts for selected year
+        });
+
         document.getElementById('generate-dummy-data-btn').addEventListener('click', generateDummyData);
 
         // Project List Search and Filter Event Listeners

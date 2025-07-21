@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>室內設計工作室財務管理</title>
+    <title>室內設計工作室財務管理 (演示版)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter font from Google Fonts -->
@@ -133,8 +133,8 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
     <div class="container py-8">
-        <h1 class="text-4xl font-bold text-center text-indigo-700 mb-8">室內設計工作室財務管理</h1>
-        <p class="text-center text-gray-600 mb-6">使用者ID: <span id="user-id-display" class="font-semibold text-indigo-600">載入中...</span></p>
+        <h1 class="text-4xl font-bold text-center text-indigo-700 mb-8">室內設計工作室財務管理 (演示版)</h1>
+        <!-- User ID display removed as it's a static demo -->
 
         <!-- Navigation Bar -->
         <nav class="bg-white p-2 rounded-xl shadow-lg mb-8 flex flex-wrap justify-center gap-2 sm:gap-4">
@@ -174,18 +174,18 @@
                 <div class="card p-5">
                     <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">收入類別分佈</h3>
                     <canvas id="incomeCategoryPieChart"></canvas>
-                    <p class="text-center text-gray-600 text-sm mt-2" id="no-income-chart-data">尚無收入數據。</p>
+                    <p class="text-center text-gray-600 text-sm mt-2 hidden" id="no-income-chart-data">尚無收入數據。</p>
                 </div>
                 <div class="card p-5">
                     <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">支出類別分佈</h3>
                     <canvas id="expenseCategoryPieChart"></canvas>
-                    <p class="text-center text-gray-600 text-sm mt-2" id="no-expense-chart-data">尚無支出數據。</p>
+                    <p class="text-center text-gray-600 text-sm mt-2 hidden" id="no-expense-chart-data">尚無支出數據。</p>
                 </div>
             </div>
             <div class="card p-5 mb-10">
                 <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">每月淨利潤趨勢 (<span id="monthly-profit-year"></span>)</h3>
                 <canvas id="monthlyNetProfitLineChart"></canvas>
-                <p class="text-center text-gray-600 text-sm mt-2" id="no-monthly-chart-data">尚無足夠數據繪製每月淨利潤趨勢圖。</p>
+                <p class="text-center text-gray-600 text-sm mt-2 hidden" id="no-monthly-chart-data">尚無足夠數據繪製每月淨利潤趨勢圖。</p>
             </div>
 
 
@@ -194,19 +194,12 @@
                 <h3 class="text-xl font-bold mb-4 text-gray-800">專案淨利排名</h3>
                 <div id="project-profit-ranking-container" class="overflow-x-auto rounded-lg shadow-sm border border-gray-100">
                     <!-- Project profit ranking table will be rendered here -->
-                    <p class="text-center text-gray-600 py-4" id="no-ranking-data">尚無專案數據可供排名。</p>
                 </div>
+                <!-- Moved outside the container to prevent it from being cleared -->
+                <p class="text-center text-gray-600 py-4 hidden" id="no-ranking-data">尚無專案數據可供排名。</p>
             </div>
 
-            <!-- Dummy Data Generator -->
-            <div class="mt-8 p-6 bg-yellow-50 rounded-xl shadow-inner border border-yellow-200 text-center">
-                <h3 class="text-xl font-bold text-yellow-800 mb-4">虛擬資料生成器</h3>
-                <p class="text-gray-700 mb-4">點擊下方按鈕可為過去 12 個月生成虛擬專案和交易數據，以便測試應用程式功能和儀表板顯示。</p>
-                <button id="generate-dummy-data-btn" class="px-6 py-3 rounded-lg shadow-md font-semibold transition-all duration-200 transform hover:scale-105 bg-yellow-600 text-white hover:bg-yellow-700">
-                    生成虛擬資料
-                </button>
-                <p class="text-sm text-gray-600 mt-2">注意：此操作將新增大量資料，請謹慎使用。</p>
-            </div>
+            <!-- Dummy Data Generator Removed -->
         </div>
 
         <!-- Project List Section -->
@@ -234,7 +227,7 @@
                 <!-- Projects will be loaded here -->
             </div>
             <!-- Moved outside the container to prevent it from being cleared -->
-            <p class="text-center text-gray-500 mt-4" id="no-projects-message">目前沒有專案。點擊「新增專案」開始記錄！</p>
+            <p class="text-center text-gray-500 mt-4 hidden" id="no-projects-message">目前沒有專案。點擊「新增專案」開始記錄！</p>
         </div>
 
         <!-- Add/Edit Project Form Section -->
@@ -325,7 +318,7 @@
 
             <div id="transactions-container" class="space-y-3">
                 <!-- Transactions will be loaded here -->
-                <p class="text-center text-gray-500" id="no-transactions-message">此專案目前沒有交易記錄。</p>
+                <p class="text-center text-gray-500 hidden" id="no-transactions-message">此專案目前沒有交易記錄。</p>
             </div>
         </div>
 
@@ -422,20 +415,14 @@
 
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables for Firebase instances and user info
-        let app;
-        let db;
-        let auth;
-        let userId;
-        let appId;
+        // In-memory data storage (replaces Firebase)
+        let allProjects = [];
+        let allTransactions = [];
         let currentProjectId = null; // To keep track of the currently viewed project
         let confirmResolver = null; // For custom confirmation dialog
+        let nextProjectId = 1; // Simple ID generator for projects
+        let nextTransactionId = 1; // Simple ID generator for transactions
 
         // Chart.js instances
         let incomePieChartInstance = null;
@@ -579,8 +566,13 @@
             const yearSelector = document.getElementById('year-selector');
             yearSelector.innerHTML = ''; // Clear existing options
             const currentYear = new Date().getFullYear();
-            for (let i = 0; i < 5; i++) { // Show current year and past 4 years
-                const year = currentYear - i;
+            // Get min/max year from dummy data for more relevant range
+            const allDates = allTransactions.map(t => new Date(t.date).getFullYear())
+                                .concat(allProjects.map(p => new Date(p.startDate).getFullYear()));
+            const minYear = allDates.length > 0 ? Math.min(...allDates) : currentYear - 4;
+            const maxYear = allDates.length > 0 ? Math.max(...allDates) : currentYear;
+
+            for (let year = maxYear; year >= minYear; year--) {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = `${year}年`;
@@ -637,160 +629,13 @@
             toggleExpenseFields('income'); // Reset expense fields visibility
         }
 
-        // --- Firebase Initialization and Authentication ---
+        // --- Data Operations (In-memory) ---
 
         /**
-         * Initializes Firebase and handles authentication.
+         * Updates all projects with their actual revenue, expense, and net profit from transactions.
+         * This function is called after any project or transaction data change.
          */
-        async function initializeFirebaseAndAuth() {
-            try {
-                // Get app ID from global variables provided by the environment
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                // Use the user-provided Firebase configuration
-                const firebaseConfig = {
-                    apiKey: "AIzaSyBAuk3H_xDDi7tezkHjHOWws66i53ZBAsg",
-                    authDomain: "accountinglan.firebaseapp.com",
-                    projectId: "accountinglan",
-                    storageBucket: "accountinglan.firebasestorage.app",
-                    messagingSenderId: "797875094335",
-                    appId: "1:797875094335:web:00d22e25927e081a4f098a"
-                };
-
-                if (Object.keys(firebaseConfig).length === 0) {
-                    throw new Error("Firebase configuration not found. Please ensure __firebase_config is set.");
-                }
-
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Sign in with custom token if available, otherwise anonymously
-                if (typeof __initial_auth_token !== 'undefined') {
-                    try {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } catch (error) {
-                        console.warn("Custom token sign-in failed, attempting anonymous sign-in:", error);
-                        // If custom token fails (e.g., mismatch), fall back to anonymous
-                        if (error.code === 'auth/custom-token-mismatch' || error.code === 'auth/invalid-custom-token') {
-                             await signInAnonymously(auth);
-                        } else {
-                            throw error; // Re-throw other unexpected errors
-                        }
-                    }
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // Listen for auth state changes
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('user-id-display').textContent = userId;
-                        console.log("Firebase initialized and authenticated. User ID:", userId);
-                        // Start listening to data once authenticated
-                        populateYearSelector(); // Populate year selector on dashboard
-                        setupFirestoreListeners();
-                        showSection('dashboard-section'); // Show dashboard after auth
-                    } else {
-                        userId = null;
-                        document.getElementById('user-id-display').textContent = '未登入';
-                        console.log("No user signed in.");
-                        showAlert("無法驗證使用者，請重新整理頁面。");
-                    }
-                });
-
-            } catch (error) {
-                console.error("Error initializing Firebase or authenticating:", error);
-                showAlert(`應用程式啟動失敗：${error.message}`);
-            }
-        }
-
-        // --- Firestore Data Operations ---
-
-        /**
-         * Sets up real-time listeners for projects and transactions.
-         */
-        function setupFirestoreListeners() {
-            if (!userId || !db) {
-                console.warn("Firestore not ready. Skipping listener setup.");
-                return;
-            }
-
-            // Listener for all projects
-            const projectsColRef = collection(db, `artifacts/${appId}/users/${userId}/projects`);
-            onSnapshot(projectsColRef, async (snapshot) => {
-                const projects = [];
-                snapshot.forEach(doc => {
-                    projects.push({ id: doc.id, ...doc.data() });
-                });
-                // Re-fetch all transactions to ensure latest actuals are used for project list and dashboard
-                await updateAllProjectsAndTransactions();
-                renderProjects(allProjects); // Use the globally updated allProjects
-                // Recalculate overall profit based on current dashboard selection
-                const selectedYear = document.getElementById('year-selector').value;
-                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
-                let timeRange = 'year'; // Default
-                if (activeTimeRangeButton) {
-                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
-                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
-                }
-                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
-                renderProjectProfitRanking(allProjects, allTransactions); // Update ranking
-                renderCharts(allTransactions, timeRange === 'year' ? selectedYear : new Date().getFullYear()); // Update charts
-            }, (error) => {
-                console.error("Error listening to projects:", error);
-                showAlert("載入專案時發生錯誤。");
-            });
-
-            // Listener for all transactions (needed for overall calculations and project list actuals)
-            const transactionsColRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
-            onSnapshot(transactionsColRef, async (snapshot) => {
-                const transactions = [];
-                snapshot.forEach(doc => {
-                    transactions.push({ id: doc.id, ...doc.data() });
-                });
-                // Re-fetch all projects to ensure latest actuals are used for project list and dashboard
-                await updateAllProjectsAndTransactions();
-                renderProjects(allProjects); // Use the globally updated allProjects
-                // Recalculate overall profit based on current dashboard selection
-                const selectedYear = document.getElementById('year-selector').value;
-                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
-                let timeRange = 'year'; // Default
-                if (activeTimeRangeButton) {
-                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
-                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
-                }
-                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
-                renderProjectProfitRanking(allProjects, allTransactions); // Update ranking
-                renderCharts(allTransactions, timeRange === 'year' ? selectedYear : new Date().getFullYear()); // Update charts
-
-                // If currently viewing a project detail, refresh its transactions
-                if (currentProjectId) {
-                    showProjectDetail(currentProjectId); // This will re-trigger its own onSnapshot for transactions
-                }
-            }, (error) => {
-                console.error("Error listening to transactions:", error);
-                showAlert("載入交易時發生錯誤。");
-            });
-        }
-
-        let allProjects = [];
-        let allTransactions = [];
-
-        /**
-         * Fetches all projects and transactions and updates global variables.
-         * This is crucial for accurate overall and project-level calculations.
-         */
-        async function updateAllProjectsAndTransactions() {
-            if (!userId || !db) return;
-
-            const projectsSnapshot = await getDocs(collection(db, `artifacts/${appId}/users/${userId}/projects`));
-            const transactionsSnapshot = await getDocs(collection(db, `artifacts/${appId}/users/${userId}/transactions`));
-
-            allProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            allTransactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            // Calculate actual revenue/expense/net profit for each project
+        function updateAllProjectsAndTransactions() {
             allProjects = allProjects.map(project => {
                 const projectTransactions = allTransactions.filter(t => t.projectId === project.id);
                 const actualRevenue = projectTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Math.round(t.amount || 0), 0);
@@ -804,41 +649,53 @@
             });
         }
 
-
         /**
-         * Adds or updates a project in Firestore.
+         * Saves (adds or updates) a project in memory.
          * @param {object} projectData The project data.
          * @param {string} [projectId] The ID of the project to update (if editing).
          */
         async function saveProject(projectData, projectId = null) {
             try {
-                if (!userId) {
-                    await showAlert("使用者未登入，無法儲存專案。");
-                    return;
-                }
-
-                // Ensure estimatedRevenue is an integer
                 projectData.estimatedRevenue = Math.round(parseFloat(projectData.estimatedRevenue || 0));
 
-                const projectsColRef = collection(db, `artifacts/${appId}/users/${userId}/projects`);
                 if (projectId) {
-                    await setDoc(doc(projectsColRef, projectId), { ...projectData, updatedAt: serverTimestamp() }, { merge: true });
-                    await showAlert("專案更新成功！");
+                    const index = allProjects.findIndex(p => p.id === projectId);
+                    if (index !== -1) {
+                        allProjects[index] = { ...allProjects[index], ...projectData };
+                        await showAlert("專案更新成功！");
+                    } else {
+                        await showAlert("找不到要更新的專案。");
+                        return;
+                    }
                 } else {
-                    await addDoc(projectsColRef, { ...projectData, createdAt: serverTimestamp() });
+                    const newProject = { id: `proj-${nextProjectId++}`, ...projectData, createdAt: new Date().toISOString() };
+                    allProjects.push(newProject);
                     await showAlert("專案新增成功！");
                 }
+                updateAllProjectsAndTransactions(); // Recalculate actuals
+                renderProjects(allProjects); // Re-render project list
+                // Recalculate dashboard data and charts as well
+                const selectedYear = document.getElementById('year-selector').value;
+                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
+                let timeRange = 'year';
+                if (activeTimeRangeButton) {
+                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
+                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
+                }
+                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
+                renderProjectProfitRanking(allProjects, allTransactions);
+                renderCharts(allTransactions, selectedYear);
+
                 resetForm(document.getElementById('project-form'));
-                showSection('project-list-section'); // Go back to project list
-            }
-             catch (error) {
+                showSection('project-list-section');
+            } catch (error) {
                 console.error("Error saving project:", error);
                 showAlert(`儲存專案失敗：${error.message}`);
             }
         }
 
         /**
-         * Deletes a project and its associated transactions from Firestore.
+         * Deletes a project and its associated transactions from memory.
          * @param {string} projectId The ID of the project to delete.
          */
         async function deleteProject(projectId) {
@@ -848,22 +705,23 @@
             }
 
             try {
-                if (!userId) {
-                    await showAlert("使用者未登入，無法刪除專案。");
-                    return;
+                allProjects = allProjects.filter(p => p.id !== projectId);
+                allTransactions = allTransactions.filter(t => t.projectId !== projectId); // Delete associated transactions
+
+                updateAllProjectsAndTransactions(); // Recalculate actuals
+                renderProjects(allProjects); // Re-render project list
+                // Recalculate dashboard data and charts as well
+                const selectedYear = document.getElementById('year-selector').value;
+                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
+                let timeRange = 'year';
+                if (activeTimeRangeButton) {
+                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
+                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
                 }
+                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
+                renderProjectProfitRanking(allProjects, allTransactions);
+                renderCharts(allTransactions, selectedYear);
 
-                // Delete all transactions associated with the project first
-                const transactionsQuery = query(collection(db, `artifacts/${appId}/users/${userId}/transactions`), where("projectId", "==", projectId));
-                const querySnapshot = await getDocs(transactionsQuery);
-                const deletePromises = [];
-                querySnapshot.forEach((doc) => {
-                    deletePromises.push(deleteDoc(doc.ref));
-                });
-                await Promise.all(deletePromises);
-
-                // Then delete the project itself
-                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/projects`, projectId));
                 await showAlert("專案及其交易記錄已成功刪除。");
             } catch (error) {
                 console.error("Error deleting project:", error);
@@ -872,34 +730,46 @@
         }
 
         /**
-         * Adds or updates a transaction in Firestore.
+         * Saves (adds or updates) a transaction in memory.
          * @param {object} transactionData The transaction data.
          * @param {string} projectId The ID of the project this transaction belongs to.
          * @param {string} [transactionId] The ID of the transaction to update (if editing).
          */
         async function saveTransaction(transactionData, projectId, transactionId = null) {
             try {
-                if (!userId) {
-                    await showAlert("使用者未登入，無法儲存交易。");
-                    return;
-                }
-
-                // Round amount before saving
                 transactionData.amount = Math.round(parseFloat(transactionData.amount || 0));
 
-                const transactionsColRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
                 if (transactionId) {
-                    await setDoc(doc(transactionsColRef, transactionId), { ...transactionData, updatedAt: serverTimestamp() }, { merge: true });
-                    await showAlert("交易更新成功！");
+                    const index = allTransactions.findIndex(t => t.id === transactionId);
+                    if (index !== -1) {
+                        allTransactions[index] = { ...allTransactions[index], ...transactionData, projectId };
+                        await showAlert("交易更新成功！");
+                    } else {
+                        await showAlert("找不到要更新的交易。");
+                        return;
+                    }
                 } else {
-                    await addDoc(transactionsColRef, { ...transactionData, projectId, createdAt: serverTimestamp() });
+                    const newTransaction = { id: `txn-${nextTransactionId++}`, ...transactionData, projectId, createdAt: new Date().toISOString() };
+                    allTransactions.push(newTransaction);
                     await showAlert("交易新增成功！");
                 }
-                resetForm(document.getElementById('transaction-form'));
-                // After saving, re-render the project detail view to show updated transactions
+                updateAllProjectsAndTransactions(); // Recalculate actuals
                 if (currentProjectId) {
-                    showProjectDetail(currentProjectId);
+                    showProjectDetail(currentProjectId); // Re-render project detail
                 }
+                // Recalculate dashboard data and charts as well
+                const selectedYear = document.getElementById('year-selector').value;
+                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
+                let timeRange = 'year';
+                if (activeTimeRangeButton) {
+                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
+                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
+                }
+                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
+                renderProjectProfitRanking(allProjects, allTransactions);
+                renderCharts(allTransactions, selectedYear);
+                
+                resetForm(document.getElementById('transaction-form'));
             } catch (error) {
                 console.error("Error saving transaction:", error);
                 showAlert(`儲存交易失敗：${error.message}`);
@@ -907,7 +777,7 @@
         }
 
         /**
-         * Deletes a transaction from Firestore.
+         * Deletes a transaction from memory.
          * @param {string} transactionId The ID of the transaction to delete.
          */
         async function deleteTransaction(transactionId) {
@@ -917,17 +787,25 @@
             }
 
             try {
-                if (!userId) {
-                    await showAlert("使用者未登入，無法刪除交易。");
-                    return;
-                }
+                allTransactions = allTransactions.filter(t => t.id !== transactionId);
 
-                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/transactions`, transactionId));
-                await showAlert("交易記錄已成功刪除。");
-                // After deleting, re-render the project detail view to reflect changes
+                updateAllProjectsAndTransactions(); // Recalculate actuals
                 if (currentProjectId) {
-                    showProjectDetail(currentProjectId);
+                    showProjectDetail(currentProjectId); // Re-render project detail
                 }
+                // Recalculate dashboard data and charts as well
+                const selectedYear = document.getElementById('year-selector').value;
+                const activeTimeRangeButton = document.querySelector('#dashboard-section .mb-8 button.bg-blue-600');
+                let timeRange = 'year';
+                if (activeTimeRangeButton) {
+                    if (activeTimeRangeButton.id === 'time-range-month') timeRange = 'month';
+                    if (activeTimeRangeButton.id === 'time-range-quarter') timeRange = 'quarter';
+                }
+                calculateOverallProfit(allProjects, allTransactions, timeRange, selectedYear);
+                renderProjectProfitRanking(allProjects, allTransactions);
+                renderCharts(allTransactions, selectedYear);
+
+                await showAlert("交易記錄已成功刪除。");
             } catch (error) {
                 console.error("Error deleting transaction:", error);
                 showAlert(`刪除交易失敗：${error.message}`);
@@ -1050,56 +928,31 @@
          * @param {string} projectId The ID of the project to display.
          */
         async function showProjectDetail(projectId) {
-            if (!userId || !db) {
-                await showAlert("應用程式未準備好，請稍候。");
+            currentProjectId = projectId; // Set the current project ID
+
+            const project = allProjects.find(p => p.id === projectId);
+
+            if (!project) {
+                await showAlert("找不到此專案。");
+                showSection('project-list-section');
                 return;
             }
 
-            currentProjectId = projectId; // Set the current project ID
+            document.getElementById('detail-project-name').textContent = project.projectName;
+            document.getElementById('detail-client-name').textContent = project.clientName || 'N/A';
+            document.getElementById('detail-project-status').textContent = project.status || '未設定';
+            document.getElementById('detail-estimated-revenue').textContent = formatCurrency(project.estimatedRevenue || 0);
+            document.getElementById('detail-start-date').textContent = project.startDate || '未設定';
+            document.getElementById('detail-end-date').textContent = project.endDate || '未設定';
+            document.getElementById('detail-project-description').textContent = project.description || '無描述';
 
-            try {
-                const projectDocRef = doc(db, `artifacts/${appId}/users/${userId}/projects`, projectId);
-                const projectSnap = await getDoc(projectDocRef);
+            document.getElementById('transaction-project-id').value = projectId; // Set hidden field for new transactions
 
-                if (!projectSnap.exists()) {
-                    await showAlert("找不到此專案。");
-                    showSection('project-list-section');
-                    return;
-                }
+            showSection('project-detail-section');
 
-                const project = { id: projectSnap.id, ...projectSnap.data() };
-                document.getElementById('detail-project-name').textContent = project.projectName;
-                document.getElementById('detail-client-name').textContent = project.clientName || 'N/A';
-                document.getElementById('detail-project-status').textContent = project.status || '未設定';
-                document.getElementById('detail-estimated-revenue').textContent = formatCurrency(project.estimatedRevenue || 0);
-                document.getElementById('detail-start-date').textContent = project.startDate || '未設定';
-                document.getElementById('detail-end-date').textContent = project.endDate || '未設定';
-                document.getElementById('detail-project-description').textContent = project.description || '無描述';
-
-                document.getElementById('transaction-project-id').value = projectId; // Set hidden field for new transactions
-
-                showSection('project-detail-section');
-
-                // Listen for transactions specific to this project
-                const transactionsColRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
-                const q = query(transactionsColRef, where("projectId", "==", projectId), orderBy("date", "desc"));
-
-                onSnapshot(q, (snapshot) => {
-                    const transactions = [];
-                    snapshot.forEach(doc => {
-                        transactions.push({ id: doc.id, ...doc.data() });
-                    });
-                    renderTransactions(transactions);
-                    calculateProjectProfit(transactions);
-                }, (error) => {
-                    console.error("Error listening to project transactions:", error);
-                    showAlert("載入專案交易時發生錯誤。");
-                });
-
-            } catch (error) {
-                console.error("Error showing project detail:", error);
-                showAlert(`顯示專案詳情失敗：${error.message}`);
-            }
+            const projectTransactions = allTransactions.filter(t => t.projectId === projectId).sort((a,b) => new Date(b.date) - new Date(a.date));
+            renderTransactions(projectTransactions);
+            calculateProjectProfit(projectTransactions);
         }
 
         /**
@@ -1275,8 +1128,10 @@
          */
         function renderProjectProfitRanking(projects, transactions) {
             const rankingContainer = document.getElementById('project-profit-ranking-container');
+            const noRankingDataMessage = document.getElementById('no-ranking-data'); // Get the message element
+            
             rankingContainer.innerHTML = ''; // Clear existing content
-            document.getElementById('no-ranking-data').classList.add('hidden');
+            noRankingDataMessage.classList.add('hidden'); // Hide the message initially
 
             const projectProfits = projects.map(project => {
                 const projectTransactions = transactions.filter(t => t.projectId === project.id);
@@ -1294,7 +1149,7 @@
             }).sort((a, b) => b.netProfit - a.netProfit); // Sort by net profit descending
 
             if (projectProfits.length === 0) {
-                document.getElementById('no-ranking-data').classList.remove('hidden');
+                noRankingDataMessage.classList.remove('hidden'); // Show the message if no data
                 return;
             }
 
@@ -1595,33 +1450,22 @@
          * @param {string} projectId The ID of the project to edit.
          */
         async function editProject(projectId) {
-            try {
-                if (!userId || !db) {
-                    await showAlert("應用程式未準備好，請稍候。");
-                    return;
-                }
-                const projectDocRef = doc(db, `artifacts/${appId}/users/${userId}/projects`, projectId);
-                const projectSnap = await getDoc(projectDocRef);
-
-                if (projectSnap.exists()) {
-                    const project = projectSnap.data();
-                    document.getElementById('project-form-title').textContent = '編輯專案';
-                    document.getElementById('current-project-id').value = projectId;
-                    document.getElementById('project-name').value = project.projectName || '';
-                    document.getElementById('client-name').value = project.clientName || '';
-                    document.getElementById('estimated-revenue').value = project.estimatedRevenue || '';
-                    document.getElementById('project-status').value = project.status || '規劃中';
-                    document.getElementById('start-date').value = project.startDate || '';
-                    document.getElementById('end-date').value = project.endDate || '';
-                    document.getElementById('project-description').value = project.description || '';
-                    showSection('project-form-section');
-                } else {
-                    await showAlert("找不到要編輯的專案。");
-                }
-            } catch (error) {
-                console.error("Error editing project:", error);
-                showAlert(`編輯專案失敗：${error.message}`);
+            const project = allProjects.find(p => p.id === projectId);
+            if (!project) {
+                await showAlert("找不到要編輯的專案。");
+                return;
             }
+            
+            document.getElementById('project-form-title').textContent = '編輯專案';
+            document.getElementById('current-project-id').value = projectId;
+            document.getElementById('project-name').value = project.projectName || '';
+            document.getElementById('client-name').value = project.clientName || '';
+            document.getElementById('estimated-revenue').value = project.estimatedRevenue || '';
+            document.getElementById('project-status').value = project.status || '規劃中';
+            document.getElementById('start-date').value = project.startDate || '';
+            document.getElementById('end-date').value = project.endDate || '';
+            document.getElementById('project-description').value = project.description || '';
+            showSection('project-form-section');
         }
 
         /**
@@ -1642,73 +1486,56 @@
          * @param {string} transactionId The ID of the transaction to edit.
          */
         async function editTransaction(transactionId) {
-            try {
-                if (!userId || !db) {
-                    await showAlert("應用程式未準備好，請稍候。");
-                    return;
-                }
-                const transactionDocRef = doc(db, `artifacts/${appId}/users/${userId}/transactions`, transactionId);
-                const transactionSnap = await getDoc(transactionDocRef);
-
-                if (transactionSnap.exists()) {
-                    const transaction = transactionSnap.data();
-                    document.getElementById('transaction-form-title').textContent = '編輯交易';
-                    document.getElementById('current-transaction-id').value = transactionId;
-                    document.getElementById('transaction-date').value = transaction.date || '';
-                    
-                    // Set radio button for type
-                    document.querySelectorAll('input[name="transactionType"]').forEach(radio => {
-                        radio.checked = (radio.value === transaction.type);
-                    });
-                    toggleExpenseFields(transaction.type); // Show/hide expense fields based on type
-
-                    document.getElementById('transaction-amount').value = transaction.amount || 0;
-                    populateCategories(transaction.type || 'income', transaction.category); // Populate categories based on existing type and select existing category
-                    document.getElementById('payment-method').value = transaction.paymentMethod || '';
-                    document.getElementById('invoice-number').value = transaction.invoiceNumber || '';
-                    document.getElementById('tax-id').value = transaction.taxId || '';
-                    document.getElementById('supplier').value = transaction.supplier || '';
-                    document.getElementById('transaction-description').value = transaction.description || '';
-                    showSection('transaction-form-section');
-                } else {
-                    await showAlert("找不到要編輯的交易。");
-                }
-            } catch (error) {
-                console.error("Error editing transaction:", error);
-                showAlert(`編輯交易失敗：${error.message}`);
-            }
-        }
-
-        /**
-         * Generates dummy data (projects and transactions) for testing purposes.
-         */
-        async function generateDummyData() {
-            const confirmed = await showConfirm("這將會新增大量的虛擬專案和交易資料。您確定要繼續嗎？");
-            if (!confirmed) {
+            const transaction = allTransactions.find(t => t.id === transactionId);
+            if (!transaction) {
+                await showAlert("找不到要編輯的交易。");
                 return;
             }
 
-            const generateBtn = document.getElementById('generate-dummy-data-btn');
-            generateBtn.disabled = true;
-            generateBtn.textContent = '正在生成中...';
+            document.getElementById('transaction-form-title').textContent = '編輯交易';
+            document.getElementById('current-transaction-id').value = transactionId;
+            document.getElementById('transaction-date').value = transaction.date || '';
+            
+            // Set radio button for type
+            document.querySelectorAll('input[name="transactionType"]').forEach(radio => {
+                radio.checked = (radio.value === transaction.type);
+            });
+            toggleExpenseFields(transaction.type); // Show/hide expense fields based on type
 
-            try {
-                const currentYear = new Date().getFullYear();
-                const currentMonth = new Date().getMonth(); // 0-11
+            document.getElementById('transaction-amount').value = transaction.amount || 0;
+            populateCategories(transaction.type || 'income', transaction.category); // Populate categories based on existing type and select existing category
+            document.getElementById('payment-method').value = transaction.paymentMethod || '';
+            document.getElementById('invoice-number').value = transaction.invoiceNumber || '';
+            document.getElementById('tax-id').value = transaction.taxId || '';
+            document.getElementById('supplier').value = transaction.supplier || '';
+            document.getElementById('transaction-description').value = transaction.description || '';
+            showSection('transaction-form-section');
+        }
 
-                for (let i = 0; i < 6; i++) { // Generate for past 6 months
-                    const projectMonth = (currentMonth - i + 12) % 12; // Calculate month for project (0-11)
-                    const projectYear = currentYear - (i > currentMonth ? 1 : 0); // Adjust year if month wraps around
+        /**
+         * Generates initial dummy data for projects and transactions.
+         */
+        function generateInitialDummyData() {
+            const currentYear = new Date().getFullYear();
+            allProjects = [];
+            allTransactions = [];
+            nextProjectId = 1;
+            nextTransactionId = 1;
 
-                    const startDate = new Date(projectYear, projectMonth, 1);
-                    const endDate = new Date(projectYear, projectMonth + 1, 0); // Last day of the month
+            // Generate data for current year and previous year
+            for (let yearOffset = 0; yearOffset < 2; yearOffset++) { // 0 for current year, 1 for previous year
+                const targetYear = currentYear - yearOffset;
+                for (let month = 0; month < 12; month++) { // Generate for all 12 months of the target year
+                    const startDate = new Date(targetYear, month, 1);
+                    const endDate = new Date(targetYear, month + 1, 0); // Last day of the month
 
-                    const projectName = `${projectYear}年${projectMonth + 1}月設計專案 ${Math.random().toString(36).substring(2, 5)}`;
-                    const clientName = `客戶 ${Math.random().toString(36).substring(2, 6)}`;
+                    const projectName = `${targetYear}年${month + 1}月設計專案 ${String.fromCharCode(65 + (month + yearOffset * 12))}`;
+                    const clientName = `客戶 ${String.fromCharCode(77 + (month + yearOffset * 12))}`;
                     const estimatedRevenue = Math.round(Math.random() * (1500000 - 500000) + 500000); // 50萬 - 150萬
                     const status = projectStatuses[Math.floor(Math.random() * projectStatuses.length)];
 
-                    const projectDocRef = await addDoc(collection(db, `artifacts/${appId}/users/${userId}/projects`), {
+                    const newProject = {
+                        id: `proj-${nextProjectId++}`,
                         projectName,
                         clientName,
                         status,
@@ -1716,35 +1543,35 @@
                         startDate: startDate.toISOString().split('T')[0],
                         endDate: endDate.toISOString().split('T')[0],
                         description: `這是關於 ${projectName} 的虛擬描述。`,
-                        createdAt: serverTimestamp()
-                    });
+                        createdAt: new Date().toISOString()
+                    };
+                    allProjects.push(newProject);
 
-                    // Generate 2-4 income transactions for the project
-                    const numIncomes = Math.floor(Math.random() * 3) + 2; // 2 to 4 incomes
-                    for (let j = 0; j < numIncomes; j++) {
-                        const incomeAmount = Math.round(Math.random() * (estimatedRevenue / numIncomes * 1.2 - estimatedRevenue / numIncomes * 0.8) + estimatedRevenue / numIncomes * 0.8);
+                    // Generate 3 income transactions for the project
+                    for (let j = 0; j < 3; j++) {
+                        const incomeAmount = Math.round(Math.random() * (estimatedRevenue / 3 * 1.2 - estimatedRevenue / 3 * 0.8) + estimatedRevenue / 3 * 0.8);
                         const incomeDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())).toISOString().split('T')[0];
                         const incomeCategory = incomeCategories[Math.floor(Math.random() * incomeCategories.length)];
                         const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
 
-                        await addDoc(collection(db, `artifacts/${appId}/users/${userId}/transactions`), {
-                            projectId: projectDocRef.id,
+                        allTransactions.push({
+                            id: `txn-${nextTransactionId++}`,
+                            projectId: newProject.id,
                             type: 'income',
                             amount: incomeAmount,
                             date: incomeDate,
                             category: incomeCategory,
                             paymentMethod: paymentMethod,
                             invoiceNumber: `INV-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-                            taxId: '', // Income won't have supplier tax ID
-                            supplier: clientName, // Client name for income
+                            taxId: '',
+                            supplier: clientName,
                             description: `虛擬收入 - ${incomeCategory} ${j + 1}`,
-                            createdAt: serverTimestamp()
+                            createdAt: new Date().toISOString()
                         });
                     }
 
-                    // Generate 3-6 expense transactions for the project
-                    const numExpenses = Math.floor(Math.random() * 4) + 3; // 3 to 6 expenses
-                    for (let j = 0; j < numExpenses; j++) {
+                    // Generate 3 expense transactions for the project
+                    for (let j = 0; j < 3; j++) {
                         const expenseAmount = Math.round(Math.random() * (100000 - 5000) + 5000); // 5千 - 10萬
                         const expenseDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())).toISOString().split('T')[0];
                         const expenseCategory = expenseCategories[Math.floor(Math.random() * expenseCategories.length)];
@@ -1752,8 +1579,9 @@
                         const supplierName = `供應商 ${Math.random().toString(36).substring(2, 6)}`;
                         const taxId = Math.floor(10000000 + Math.random() * 90000000).toString(); // 8-digit number
 
-                        await addDoc(collection(db, `artifacts/${appId}/users/${userId}/transactions`), {
-                            projectId: projectDocRef.id,
+                        allTransactions.push({
+                            id: `txn-${nextTransactionId++}`,
+                            projectId: newProject.id,
                             type: 'expense',
                             amount: expenseAmount,
                             date: expenseDate,
@@ -1763,28 +1591,42 @@
                             taxId: taxId,
                             supplier: supplierName,
                             description: `虛擬支出 - ${expenseCategory} ${j + 1}`,
-                            createdAt: serverTimestamp()
+                            createdAt: new Date().toISOString()
                         });
                     }
                 }
-                await showAlert("虛擬資料生成成功！");
-            } catch (error) {
-                console.error("生成虛擬資料失敗:", error);
-                showAlert(`生成虛擬資料失敗: ${error.message}`);
-            } finally {
-                generateBtn.disabled = false;
-                generateBtn.textContent = '生成虛擬資料';
             }
+            console.log("Dummy data generated:", allProjects, allTransactions);
+        }
+
+        /**
+         * Initializes the application data and UI.
+         */
+        function initializeAppData() {
+            generateInitialDummyData(); // Generate data on load
+            updateAllProjectsAndTransactions(); // Calculate initial actuals
+            populateYearSelector(); // Populate year dropdown
+            
+            // Set initial dashboard view to 'year' and current year
+            const currentYear = new Date().getFullYear().toString();
+            calculateOverallProfit(allProjects, allTransactions, 'year', currentYear);
+            renderProjectProfitRanking(allProjects, allTransactions);
+            renderCharts(allTransactions, currentYear);
+
+            showSection('dashboard-section'); // Show dashboard initially
         }
 
 
         // --- Event Listeners ---
 
-        window.onload = initializeFirebaseAndAuth; // Initialize Firebase when the page loads
+        window.onload = initializeAppData; // Initialize app data when the page loads
 
         // Navigation Bar Event Listeners
         document.getElementById('nav-dashboard-btn').addEventListener('click', () => showSection('dashboard-section'));
-        document.getElementById('nav-projects-btn').addEventListener('click', () => showSection('project-list-section'));
+        document.getElementById('nav-projects-btn').addEventListener('click', () => {
+            renderProjects(allProjects); // Ensure project list is fresh when navigating
+            showSection('project-list-section');
+        });
 
         // Dashboard Time Range Event Listeners
         document.getElementById('time-range-month').addEventListener('click', () => calculateOverallProfit(allProjects, allTransactions, 'month', new Date().getFullYear().toString()));
@@ -1795,7 +1637,7 @@
             renderCharts(allTransactions, e.target.value); // Re-render charts for selected year
         });
 
-        document.getElementById('generate-dummy-data-btn').addEventListener('click', generateDummyData);
+        // Dummy data generator button removed
 
         // Project List Search and Filter Event Listeners
         document.getElementById('search-project-name').addEventListener('input', () => renderProjects(allProjects));

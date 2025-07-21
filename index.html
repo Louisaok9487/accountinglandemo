@@ -41,6 +41,8 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Recharts CDN for charts -->
     <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+    <!-- Babel Standalone CDN for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -91,7 +93,7 @@
                 const clientName = `客戶 ${generateRandomString(4)}`;
                 const estimatedRevenue = generateRandomAmount(500000, 1500000);
                 // For demo, older projects are likely '已結案'
-                const status = i < 6 ? '已結案' : projectStatuses[Math.floor(Math.random() * (projectStatuses.length - 1))]; // Avoid '暫停' for recent
+                let status = i < 6 ? '已結案' : projectStatuses[Math.floor(Math.random() * (projectStatuses.length - 1))]; // Avoid '暫停' for recent
                 if (status === '暫停') { // Ensure older projects are '已結案'
                     status = '已結案';
                 }

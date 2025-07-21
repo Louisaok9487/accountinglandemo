@@ -138,7 +138,7 @@
 
         <!-- Navigation Bar -->
         <nav class="bg-white p-2 rounded-xl shadow-lg mb-8 flex flex-wrap justify-center gap-2 sm:gap-4">
-            <button id="nav-dashboard-btn" class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer bg-blue-600 text-white shadow-md transform scale-105">儀表板</button>
+            <button id="nav-dashboard-btn" class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer bg-blue-600 text-white shadow-md">儀表板</button>
             <button id="nav-projects-btn" class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-600">專案列表</button>
         </nav>
 
@@ -183,9 +183,9 @@
                 </div>
             </div>
             <div class="card p-5 mb-10">
-                <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">每月淨利潤趨勢 (<span id="monthly-profit-year"></span>)</h3>
+                <h3 class="text-xl font-bold mb-4 text-gray-800 text-center">每月財務趨勢 (<span id="monthly-profit-year"></span>)</h3>
                 <canvas id="monthlyNetProfitLineChart"></canvas>
-                <p class="text-center text-gray-600 text-sm mt-2 hidden" id="no-monthly-chart-data">尚無足夠數據繪製每月淨利潤趨勢圖。</p>
+                <p class="text-center text-gray-600 text-sm mt-2 hidden" id="no-monthly-chart-data">尚無足夠數據繪製每月財務趨勢圖。</p>
             </div>
 
 
@@ -318,8 +318,8 @@
 
             <div id="transactions-container" class="space-y-3">
                 <!-- Transactions will be loaded here -->
-                <p class="text-center text-gray-500 hidden" id="no-transactions-message">此專案目前沒有交易記錄。</p>
             </div>
+            <p class="text-center text-gray-500 mt-4 hidden" id="no-transactions-message">此專案目前沒有交易記錄。</p>
         </div>
 
         <!-- Add/Edit Transaction Form Section (hidden by default) -->
@@ -598,14 +598,14 @@
 
             // Update navigation bar active state
             document.querySelectorAll('nav button').forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md', 'transform', 'scale-105');
+                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
                 btn.classList.add('bg-white', 'text-gray-700', 'hover:bg-blue-50', 'hover:text-blue-600');
             });
             if (sectionId === 'dashboard-section') {
-                document.getElementById('nav-dashboard-btn').classList.add('bg-blue-600', 'text-white', 'shadow-md', 'transform', 'scale-105');
+                document.getElementById('nav-dashboard-btn').classList.add('bg-blue-600', 'text-white', 'shadow-md');
                 document.getElementById('nav-dashboard-btn').classList.remove('bg-white', 'text-gray-700', 'hover:bg-blue-50', 'hover:text-blue-600');
             } else if (sectionId === 'project-list-section' || sectionId === 'project-form-section' || sectionId === 'project-detail-section' || sectionId === 'transaction-form-section') {
-                document.getElementById('nav-projects-btn').classList.add('bg-blue-600', 'text-white', 'shadow-md', 'transform', 'scale-105');
+                document.getElementById('nav-projects-btn').classList.add('bg-blue-600', 'text-white', 'shadow-md');
                 document.getElementById('nav-projects-btn').classList.remove('bg-white', 'text-gray-700', 'hover:bg-blue-50', 'hover:text-blue-600');
             }
         }
@@ -807,8 +807,8 @@
 
                 await showAlert("交易記錄已成功刪除。");
             } catch (error) {
-                console.error("Error deleting transaction:", error);
-                showAlert(`刪除交易失敗：${error.message}`);
+                    console.error("Error deleting transaction:", error);
+                    showAlert(`刪除交易失敗：${error.message}`);
             }
         }
 
@@ -961,11 +961,13 @@
          */
         function renderTransactions(transactions) {
             const transactionsContainer = document.getElementById('transactions-container');
+            const noTransactionsMessage = document.getElementById('no-transactions-message'); // Get the message element
+            
             transactionsContainer.innerHTML = ''; // Clear existing transactions
-            document.getElementById('no-transactions-message').classList.add('hidden');
+            noTransactionsMessage.classList.add('hidden'); // Hide the message initially
 
             if (transactions.length === 0) {
-                document.getElementById('no-transactions-message').classList.remove('hidden');
+                noTransactionsMessage.classList.remove('hidden'); // Show the message if no data
                 return;
             }
 
@@ -1218,8 +1220,11 @@
                 return acc;
             }, {});
 
-            const labels = Object.keys(aggregatedData);
-            const data = Object.values(aggregatedData);
+            // Sort data from largest to smallest
+            const sortedEntries = Object.entries(aggregatedData).sort(([, a], [, b]) => b - a);
+            const labels = sortedEntries.map(([label]) => label);
+            const data = sortedEntries.map(([, value]) => value);
+            const total = data.reduce((sum, val) => sum + val, 0);
 
             const ctx = document.getElementById('incomeCategoryPieChart').getContext('2d');
             const noDataMessage = document.getElementById('no-income-chart-data');
@@ -1259,7 +1264,9 @@
                                         label += ': ';
                                     }
                                     if (context.parsed !== null) {
-                                        label += formatCurrency(context.parsed);
+                                        const value = context.parsed;
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        label += `${formatCurrency(value)} (${percentage}%)`;
                                     }
                                     return label;
                                 }
@@ -1285,8 +1292,11 @@
                 return acc;
             }, {});
 
-            const labels = Object.keys(aggregatedData);
-            const data = Object.values(aggregatedData);
+            // Sort data from largest to smallest
+            const sortedEntries = Object.entries(aggregatedData).sort(([, a], [, b]) => b - a);
+            const labels = sortedEntries.map(([label]) => label);
+            const data = sortedEntries.map(([, value]) => value);
+            const total = data.reduce((sum, val) => sum + val, 0);
 
             const ctx = document.getElementById('expenseCategoryPieChart').getContext('2d');
             const noDataMessage = document.getElementById('no-expense-chart-data');
@@ -1327,7 +1337,9 @@
                                         label += ': ';
                                     }
                                     if (context.parsed !== null) {
-                                        label += formatCurrency(context.parsed);
+                                        const value = context.parsed;
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        label += `${formatCurrency(value)} (${percentage}%)`;
                                     }
                                     return label;
                                 }
@@ -1360,6 +1372,8 @@
                 }
             });
 
+            const incomes = monthlyData.map(data => data.income);
+            const expenses = monthlyData.map(data => data.expense);
             const netProfits = monthlyData.map(data => data.income - data.expense);
             const labels = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
@@ -1380,14 +1394,32 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: '淨利潤 (NT$)',
-                        data: netProfits,
-                        borderColor: '#4F46E5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                        fill: true,
-                        tension: 0.3
-                    }]
+                    datasets: [
+                        {
+                            label: '收入 (NT$)',
+                            data: incomes,
+                            borderColor: '#3B82F6', // Blue
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            fill: false,
+                            tension: 0.3
+                        },
+                        {
+                            label: '支出 (NT$)',
+                            data: expenses,
+                            borderColor: '#EF4444', // Red
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            fill: false,
+                            tension: 0.3
+                        },
+                        {
+                            label: '淨利潤 (NT$)',
+                            data: netProfits,
+                            borderColor: '#10B981', // Green
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -1547,9 +1579,10 @@
                     };
                     allProjects.push(newProject);
 
-                    // Generate 3 income transactions for the project
-                    for (let j = 0; j < 3; j++) {
-                        const incomeAmount = Math.round(Math.random() * (estimatedRevenue / 3 * 1.2 - estimatedRevenue / 3 * 0.8) + estimatedRevenue / 3 * 0.8);
+                    // Generate 3-7 income transactions for the project
+                    const numIncomes = Math.floor(Math.random() * (7 - 3 + 1)) + 3;
+                    for (let j = 0; j < numIncomes; j++) {
+                        const incomeAmount = Math.round(Math.random() * (estimatedRevenue / numIncomes * 1.2 - estimatedRevenue / numIncomes * 0.8) + estimatedRevenue / numIncomes * 0.8);
                         const incomeDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())).toISOString().split('T')[0];
                         const incomeCategory = incomeCategories[Math.floor(Math.random() * incomeCategories.length)];
                         const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
@@ -1570,8 +1603,9 @@
                         });
                     }
 
-                    // Generate 3 expense transactions for the project
-                    for (let j = 0; j < 3; j++) {
+                    // Generate 5-10 expense transactions for the project
+                    const numExpenses = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+                    for (let j = 0; j < numExpenses; j++) {
                         const expenseAmount = Math.round(Math.random() * (100000 - 5000) + 5000); // 5千 - 10萬
                         const expenseDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime())).toISOString().split('T')[0];
                         const expenseCategory = expenseCategories[Math.floor(Math.random() * expenseCategories.length)];

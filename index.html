@@ -597,7 +597,15 @@
             try {
                 // Get app ID and Firebase config from global variables provided by the environment
                 appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                // Use the user-provided Firebase configuration
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBAuk3H_xDDi7tezkHjHOWws66i53ZBAsg",
+                    authDomain: "accountinglan.firebaseapp.com",
+                    projectId: "accountinglan",
+                    storageBucket: "accountinglan.firebasestorage.app",
+                    messagingSenderId: "797875094335",
+                    appId: "1:797875094335:web:00d22e25927e081a4f098a"
+                };
 
                 if (Object.keys(firebaseConfig).length === 0) {
                     throw new Error("Firebase configuration not found. Please ensure __firebase_config is set.");
@@ -609,7 +617,17 @@
 
                 // Sign in with custom token if available, otherwise anonymously
                 if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (error) {
+                        console.warn("Custom token sign-in failed, attempting anonymous sign-in:", error);
+                        // If custom token fails (e.g., mismatch), fall back to anonymous
+                        if (error.code === 'auth/custom-token-mismatch' || error.code === 'auth/invalid-custom-token') {
+                             await signInAnonymously(auth);
+                        } else {
+                            throw error; // Re-throw other unexpected errors
+                        }
+                    }
                 } else {
                     await signInAnonymously(auth);
                 }
@@ -741,7 +759,8 @@
                 }
                 resetForm(document.getElementById('project-form'));
                 showSection('project-list-section'); // Go back to project list
-            } catch (error) {
+            }
+             catch (error) {
                 console.error("Error saving project:", error);
                 showAlert(`儲存專案失敗：${error.message}`);
             }
